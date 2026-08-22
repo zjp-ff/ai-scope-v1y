@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>AI侦查镜</title>
+<style>
+:root{--a50:#FAEEDA;--a75:#FAC775;--a6:#854F0B;--a9:#412402;--p50:#EEEDFE;--p100:#CECBF6;--p6:#534AB7;--p8:#3C3489;--c50:#FAECE7;--c6:#D85A30;--r4:#E24B4A;--r50:#FCEBEB;--g4:#639922;--g50:#EAF3DE;--bg:#FAF9F6;--card:#FFFFFF;--bd:#E8E6E0;--t1:#2C2C2A;--t2:#6B6963;--t3:#9E9B94;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t1);font-size:15px;max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:40px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.banner{background:linear-gradient(135deg,var(--a50),var(--p50));padding:22px 20px 18px}
+.banner h1{font-size:24px;font-weight:700;display:flex;align-items:center;gap:10px}.badge{font-size:11px;color:var(--g4);background:var(--g50);padding:3px 10px;border-radius:10px}
+.banner p{font-size:13px;color:var(--a6);margin:6px 0 0}
+.qual-bar{margin:12px;padding:12px 14px;background:var(--p50);border-radius:12px;display:flex;justify-content:space-between}
+.qual-bar.locked .qual-btn{background:var(--p6);color:#fff;border:none}
+.qual-btn{font-size:14px;color:var(--p6);border:0.5px solid var(--p4);padding:7px 18px;border-radius:16px;cursor:pointer}
+.search-box{padding:6px 16px 10px;position:relative}
+.search-input{display:flex;gap:8px;background:var(--card);border:0.5px solid var(--bd);border-radius:12px;padding:10px 14px}
+.search-input input{flex:1;border:none;background:transparent;font-size:15px;outline:none}
+.search-btn{background:var(--p6);color:#fff;border:none;padding:8px 22px;border-radius:8px;cursor:pointer}
+#suggestions{display:none;position:absolute;background:var(--card);border:0.5px solid var(--bd);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:100;left:16px;right:16px}
+.sug-item{display:flex;justify-content:space-between;padding:10px 14px;cursor:pointer;border-bottom:0.5px solid var(--bd)}
+.sug-item:last-child{border-bottom:none}.sug-item:active{background:var(--p50)}
+.hot-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.hot-tags span{font-size:12px;color:var(--t2);background:var(--card);border:0.5px solid var(--bd);padding:5px 12px;border-radius:14px;cursor:pointer}
+.profile-card{background:var(--card);border:0.5px solid var(--bd);border-radius:14px;padding:16px;margin:6px 16px 0;animation:fadeIn .4s ease}
+.p-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.p-name{font-size:16px;font-weight:600}.p-code{font-size:12px;color:var(--t3)}
+.p-price{text-align:right}.p-price .val{font-size:18px;font-weight:600}
+.p-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.p-item{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+.p-item .label{color:var(--t2)}.p-item .value{font-weight:500}
+.score-box,.ai-read{margin:0 16px}.score-box{background:var(--card);border:0.5px solid var(--bd);border-radius:14px;padding:18px;margin-top:12px;text-align:center;animation:fadeIn .4s ease}
+.score-num{font-size:38px;font-weight:700;line-height:1;margin:6px 0}.score-grade{display:inline-block;font-size:12px;padding:3px 14px;border-radius:12px}
+.ai-read{background:linear-gradient(135deg,var(--p50),var(--a50));border-radius:14px;padding:14px;margin-top:10px;animation:fadeIn .4s ease}
+.ai-read .text{font-size:13px;line-height:1.7}
+.dim-expand{padding:0 16px}.d-card{background:var(--card);border:0.5px solid var(--bd);border-radius:12px;padding:14px;margin-top:8px;animation:fadeIn .4s ease}
+.d-head{display:flex;justify-content:space-between;margin-bottom:8px}.d-name,.d-score{font-size:13px;font-weight:600}
+.d-bar{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.d-bar i{display:block;height:100%;border-radius:3px;transition:width .6s ease}
+.d-finding{font-size:12px;color:var(--t2);padding:8px 10px;background:var(--bg);border-radius:8px;margin-top:6px;line-height:1.7}
+.cursor{display:inline-block;width:2px;height:14px;background:var(--p6);animation:blink 1s infinite;vertical-align:middle}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:24px}
+.overlay.show{display:flex}.modal{background:var(--card);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;animation:fadeIn .3s}
+.modal .btn-row{display:flex;gap:10px;margin-top:16px}.modal .btn-pri{background:var(--p6);color:#fff;padding:11px;border-radius:10px;border:none;flex:1;cursor:pointer}.modal .btn-sec{background:var(--bg);color:var(--t2);border:0.5px solid var(--bd);padding:11px;border-radius:10px;flex:1;cursor:pointer}
+.modal h3{font-size:17px;font-weight:600}.modal p{font-size:13px;color:var(--t2);margin:10px 0}
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;z-index:300;display:none}.toast.show{display:block}
+.act-card{margin:16px 12px;padding:14px;background:var(--c50);border-radius:14px;text-align:center}
+.act-card h4{font-size:14px;font-weight:600;color:var(--c6)}
+#loadMask{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.lm-spin{width:46px;height:46px;border:4px solid var(--bd);border-top-color:var(--p6);border-radius:50%;animation:lmSpin .9s linear infinite}
+@keyframes lmSpin{to{transform:rotate(360deg)}}
+.lm-t1{font-size:17px;font-weight:600;color:var(--t1)}
+.lm-t2{font-size:12px;color:var(--t2);text-align:center;max-width:260px;line-height:1.6}
+#loadMask.err{cursor:pointer}
+</style>
+</head>
+<body>
+<div id="loadMask">
+  <div class="lm-spin"></div>
+  <div class="lm-t1">数据加载中…</div>
+  <div class="lm-t2" id="lmTip">每天首次打开需下载全量数据，请保持网络畅通</div>
+</div>
+<div id="actMask" style="position:fixed;inset:0;z-index:9999;background:#FAF9F6;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;text-align:center">
+  <h1 style="margin:0 0 8px;font-size:22px;color:#2C2C2A">🔍 AI侦查镜</h1>
+  <p style="margin:0 0 18px;font-size:13px;color:#854F0B">投教VIP专属</p>
+  <p style="margin:0 0 10px;font-size:14px;color:#2C2C2A">请输入激活码解锁本版本</p>
+  <input id="actInput" autocomplete="off" placeholder="输入激活码" style="width:220px;padding:10px 14px;border:1px solid #E8E6E0;border-radius:10px;font-size:15px;text-align:center;outline:none;background:#fff">
+  <button id="actBtn" onclick="tryActivate()" style="margin-top:12px;padding:10px 40px;border:none;border-radius:10px;background:#534AB7;color:#fff;font-size:15px;cursor:pointer">激 活</button>
+  <p id="actMsg" style="margin:12px 0 0;font-size:13px;color:#D85A30"></p>
+  <p style="position:absolute;bottom:20px;font-size:10px;color:#9E9B94">本页面数据仅供参考，不构成投资建议</p>
+</div>
+<div class="banner" style="text-align:center">
+  <div style="margin-bottom:6px;text-align:left">
+    <span class="badge" style="background:var(--a75);color:var(--a9);font-size:12px;padding:3px 12px;border-radius:14px;font-weight:500">&#9733; 投教VIP专属</span>
+  </div>
+  <h1 style="justify-content:center"><svg width="32" height="32" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="#534AB7" stroke-width="2"/><circle cx="14" cy="14" r="6" stroke="#534AB7" stroke-width="1.5"/><line x1="14" y1="0" x2="14" y2="5" stroke="#534AB7" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="23" x2="14" y2="28" stroke="#534AB7" stroke-width="2" stroke-linecap="round"/><line x1="0" y1="14" x2="5" y2="14" stroke="#534AB7" stroke-width="2" stroke-linecap="round"/><line x1="23" y1="14" x2="28" y2="14" stroke="#534AB7" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="14" r="2" fill="#D85A30"/></svg>AI侦查镜</h1>
+  <p style="text-align:center">弘历周年庆限定 - A股智能诊断</p>
+  <p style="font-size:11px;color:var(--a6);margin-top:6px;text-align:center" id="updateTime">数据加载中...</p>
+  <p style="font-size:11px;color:var(--a6);text-align:center;margin-top:2px">本链接有效期至 2027年8月20日</p>
+</div>
+<div class="search-box">
+  <div class="search-input">
+    <input id="stockInput" placeholder="" autocomplete="off" onkeydown="if(event.key==='Enter')doDiag()">
+    <button class="search-btn" onclick="doDiag()">侦查</button>
+  </div>
+  <div id="suggestions"></div>
+  <div class="hot-tags" id="hotTags"></div>
+</div>
+<div id="result"></div>
+<div style="margin:8px 12px 8px;padding:10px 14px;background:var(--bg);border-radius:10px;text-align:center"><p style="font-size:10px;color:var(--t3);line-height:1.6">免责声明：本页面所有数据仅供参考，不构成任何投资建议或承诺，投资有风险，入市需谨慎。</p></div>
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>领取限时权益</h3>
+    <p>联系助教老师即可解锁全部权益</p>
+    <img src="qrcode.jpg" width="140" height="140" style="border-radius:10px;margin:8px auto;display:block">
+    <p style="font-size:12px;color:var(--t3);margin-top:-2px">扫码联系助教老师</p>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="closeModal()">稍后再说</button>
+      <button class="btn-pri" onclick="unlock()">我已联系立即解锁</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let catalog=[],quotes={},full={},loaded=false,currentCode=null,HOT=['600519','300750','002594','601318','300059','000858','000333','600036','600276','002415','002230','000063','603019','600900','601857','601899','002352','601127','601012'];
+
+// ===== 激活码机制（1人1码，退款作废支持）=====
+const VALID_CODES=['KTS9YBRZ','JNANNS5D','8BTZKZSF','VXB8SQN8','VSCFFX7P','FRX5UVST','E4VVQFX4','3YR7AFGT','N63TD8HA','7R4DVSRF','QVP7G9TU','M26VK752','37KA25HR','KVYS2GGB','4A8DAZ8S','UC6Z976N','764TZ7VP','94CWSRCN','95CECU4M','784KPWHG','36Y9APSP','CNVM8396','A3C8DA95','QPDHG2ZK','2HXCN5QW','JPTFNWKQ','47QJ7YZW','GP7AR52J','SBX7YZYD','KC62VHDT','MDVVRW82','26H5UZCB','82ATTYXF','E8ZVM4EW','K7SSSNBA','FQGU6RQS','5ZHE7UPP','ZTW569DN','AYNCHKSK','THBP54EQ','AV4CZ6TM','NDF53JM5','CN8VY8WJ','2XPB2RCT','WUUEX6SJ','V4B5X656','MG69BK7U','DJB4RVG4'];
+const ACT_EXPIRY='2027-08-20';
+function actExpired(){try{return new Date()>new Date(ACT_EXPIRY+'T23:59:59');}catch(_){return false;}}
+function actGet(){try{return JSON.parse(localStorage.getItem('aiscope_act')||'null');}catch(_){return null;}}
+function actOk(){if(actExpired())return false;var a=actGet();if(!a||!a.code)return false;return VALID_CODES.indexOf(a.code)>=0;}
+function tryActivate(){
+  var code=(document.getElementById('actInput').value||'').trim().toUpperCase();
+  var msg=document.getElementById('actMsg');
+  if(!code){msg.textContent='请输入激活码';return;}
+  if(VALID_CODES.indexOf(code)<0){msg.textContent='激活码无效，请联系助教';return;}
+  localStorage.setItem('aiscope_act',JSON.stringify({code:code,at:new Date().toISOString()}));
+  document.getElementById('actMask').style.display='none';
+}
+function initAct(){
+  var m=document.getElementById('actMask');
+  if(actOk()){m.style.display='none';return;}
+  if(actExpired()){document.getElementById('actInput').style.display='none';document.getElementById('actBtn').style.display='none';document.getElementById('actMsg').textContent='本版本已到期';}
+}
+initAct();
+function dataDay(){const n=new Date();const bj=new Date(n.getTime()+8*3600*1000);if(bj.getUTCHours()*60+bj.getUTCMinutes()>=975)return bj.toISOString().slice(0,10);bj.setUTCDate(bj.getUTCDate()-1);return bj.toISOString().slice(0,10);}
+function isFresh(d){if(!d||!d.generatedAt)return true;return d.generatedAt.indexOf(dataDay())>=0;}
+
+function hideLoadMask(){var m=document.getElementById('loadMask');if(m)m.style.display='none';}
+function loadFail(){var m=document.getElementById('loadMask');var t=document.getElementById('lmTip');if(m){m.classList.add('err');m.onclick=function(){location.reload();};}if(t)t.textContent='加载较慢或失败，点击页面任意处重试';}
+setTimeout(function(){var m=document.getElementById('loadMask');if(m&&m.style.display!=='none'&&!m.classList.contains('err'))loadFail();},90000);
+
+function idbGet(k){return new Promise(function(res){try{if(!window.indexedDB){res(null);return;}var r=indexedDB.open('aiscope_cache',1);r.onupgradeneeded=function(e){try{e.target.result.createObjectStore('kv');}catch(_){}};r.onsuccess=function(e){var db=e.target.result;try{var tx=db.transaction('kv','readonly');var g=tx.objectStore('kv').get(k);g.onsuccess=function(){res(g.result||null);};g.onerror=function(){res(null);};}catch(_){res(null);}};r.onerror=function(){res(null);};}catch(_){res(null);}});}
+function idbSet(k,v){return new Promise(function(res){try{if(!window.indexedDB){res();return;}var r=indexedDB.open('aiscope_cache',1);r.onupgradeneeded=function(e){try{e.target.result.createObjectStore('kv');}catch(_){}};r.onsuccess=function(e){var db=e.target.result;try{var tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=function(){res();};tx.onerror=function(){res();};}catch(_){res();}};r.onerror=function(){res();};}catch(_){res();}});}
+function cachedJson(url){return idbGet(url).then(function(c){if(c!==null)return c;return fetch(url,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){idbSet(url,d);return d;});});}
+
+function refreshData(){
+  const dayKey=Math.floor((Date.now()-288e5)/864e5); // 缓存键在16:00翻面，确保盘后更新被拉取
+  // 先加载小文件，页面秒出（数据打包在本地，不依赖外部数据源）
+  Promise.all([
+    cachedJson('stocks_catalog.json?_d='+dayKey+'&v='+PAGE_VER).then(d=>{catalog=d;}),
+    cachedJson('quotes_cache.json?_d='+dayKey+'&v='+PAGE_VER).then(d=>{quotes=d;}),
+  ]  ).then(()=>{
+    if(!loaded){document.getElementById('stockInput').placeholder='输入股票名称或代码';setupAuto();renderHots();loaded=true;}
+  }).catch(()=>{});
+  // 后台加载大文件：任何情况先显示可用数据，不新鲜时提示并由后台自动补新（不转圈）
+  cachedJson('data_cache.json?_d='+dayKey+'&v='+PAGE_VER).then(d=>{
+    full=d;
+    if(!isFresh(d)){
+      var u='data_cache.json?_d='+dayKey+'&v='+PAGE_VER;
+      fetch(u,{cache:'no-store'}).then(function(r){return r.json();}).then(function(fresh){
+        if(fresh&&fresh.generatedAt!==d.generatedAt){full=fresh;idbSet(u,fresh);document.getElementById('updateTime').textContent='数据更新于 '+(fresh.generatedAt||'');if(currentCode)show(currentCode,true);}
+      }).catch(function(){});
+    }
+    document.getElementById('updateTime').textContent='数据更新于 '+(d.generatedAt||'2026-07-27 收盘');
+    hideLoadMask();
+    if(currentCode)show(currentCode,true);
+  }).catch(()=>{loadFail();});
+}
+const PAGE_VER='20260804-7';
+function checkSelfUpdate(){fetch('version.txt?_d='+Date.now()).then(r=>r.text()).then(t=>{t=t.trim();if(t&&t!==PAGE_VER){location.reload(true);}}).catch(()=>{});}
+function init(){refreshData();checkSelfUpdate();setInterval(function(){refreshData();checkSelfUpdate();},5*60*1000);}
+init();
+
+function setupAuto(){
+  const inp=document.getElementById('stockInput');let timer;
+  inp.addEventListener('input',function(){
+    clearTimeout(timer);timer=setTimeout(()=>{
+      const v=this.value.trim();if(v.length<1){sgst([]);return;}
+      const m=catalog.filter(s=>s.name.includes(v)||s.code.includes(v)).slice(0,8);
+      sgst(m);
+    },150);
+  });
+  inp.addEventListener('blur',()=>setTimeout(()=>sgst([]),200));
+}
+function sgst(list){
+  const el=document.getElementById('suggestions');
+  if(list.length) el.innerHTML=list.map(s=>{
+    const l=quotes[s.code];const z=l?l.z:0;
+    const col=z>0?'var(--r4)':z<0?'var(--g4)':'var(--t3)';
+    return '<div class="sug-item" onclick="pick(\''+s.code+'\')"><span class="sug-name">'+s.name+'</span><span class="sug-code" style="color:'+col+'">'+s.code+' '+(z>0?'▲':'▼')+''+(z?Math.abs(z).toFixed(1)+'%':'')+'</span></div>';
+  }).join('');
+  el.style.display=list.length?'block':'none';
+}
+function pick(c){const s=catalog.find(x=>x.code===c);document.getElementById('stockInput').value=s?s.name:c;sgst([]);show(c);}
+
+function doDiag(){
+  const v=document.getElementById('stockInput').value.trim();
+  if(!v){toast('请输入股票名称或代码');return;}
+  // resolve
+  let r=catalog.find(x=>x.code===v);if(!r)r=catalog.find(x=>x.name===v);
+  if(!r)r=catalog.filter(x=>x.name.includes(v)||x.code.includes(v))[0];
+  if(!r){toast('未找到该股票');return;}
+  document.getElementById('stockInput').value=r.name;sgst([]);show(r.code);
+}
+
+function show(c, silent){
+  if(!silent)sgst([]);currentCode=c;const el=document.getElementById('result');
+  const q=quotes[c];const ct=catalog.find(x=>x.code===c);
+  const fd=full&&full.stocks&&full.stocks[c]?full.stocks[c]:null;
+  if(!q||!fd){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--t3);font-size:13px">'+(!full?'技术分析加载中... 数据量较大请稍候':'暂无数据')+'</div>';return;}
+  const nm=ct?ct.name:'';const up=q.z>0;
+
+  // Base info - just price
+  let html='<div style="padding:0 16px"><div class="profile-card"><div class="p-header"><div><div class="p-name">'+nm+' <span style="font-size:12px;font-weight:400;color:var(--t3)">'+(fd.i||'')+'</span></div><div class="p-code">'+c+(fd.i?' - '+fd.i:'')+'</div></div><div class="p-price"><div class="val" style="color:'+(up?'var(--r4)':'var(--g4)')+'">¥'+q.p.toFixed(2)+'</div><div class="chg" style="color:'+(up?'var(--r4)':'var(--g4)')+'">'+(up?'▲':'▼')+' '+Math.abs(q.z).toFixed(2)+'%</div></div></div></div>';
+
+  // 技术分析
+  if(fd.s){
+    html+='<div style="margin:12px 16px 0;font-size:12px;font-weight:500;color:var(--t2)">技术分析</div><div class="dim-expand">';
+    const dc=[{k:'trend',l:'趋势动能',c:'#534AB7'},{k:'fund',l:'基本面',c:'#854F0B'},{k:'risk',l:'风险控制',c:'#D85A30'},{k:'momentum',l:'资金流向',c:'#639922'},{k:'vol',l:'量价配合',c:'#7F77DD'}];
+    dc.forEach(cfg=>{
+      const v=fd.s[cfg.k];const f=fd.f[cfg.k];
+      html+='<div class="d-card"><div class="d-head"><div class="d-name" style="color:'+cfg.c+'">'+cfg.l+'</div><div class="d-score" style="color:'+cfg.c+'">'+v+'分</div></div><div class="d-bar"><i style="width:'+v+'%;background:'+cfg.c+'"></i></div><div class="d-finding" style="margin-top:0">'+f+'</div></div>';
+    });
+    html+='</div></div>';
+  }
+
+  html+='</div>';el.innerHTML=html;if(!silent)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderHots(){
+  const names=catalog.filter(x=>HOT.includes(x.code));
+  document.getElementById('hotTags').innerHTML=names.map(s=>{
+    const q=quotes[s.code];
+    const col=q&&q.z>0?'var(--r4)':q&&q.z<0?'var(--g4)':'';
+    return '<span onclick="show(\''+s.code+'\')" style="'+(col?'border-color:'+col+';color:'+col:'')+'">'+s.name+'</span>';
+  }).join('');
+}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function openModal(){document.getElementById('overlay').classList.add('show')}
+function closeModal(){document.getElementById('overlay').classList.remove('show')}
+function unlock(){closeModal();const qb=document.getElementById('qualBar');qb.classList.remove('locked');qb.querySelector('.qual-btn').textContent='已解锁';qb.querySelector('.qual-btn').style.background='var(--g4)';toast('已解锁');}
+</script>
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container" style="display:none">总访问 <span id="busuanzi_value_site_pv">0</span></span>
+</body>
+</html>
